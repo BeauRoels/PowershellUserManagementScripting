@@ -29,8 +29,7 @@ Function CreateGroups()
       $GroupName = $ClassRecord.klas
 
       # Creating the container
-      New-ADObject -Name $GroupName -Type 'container' -Path 'OU=leerlingen,DC=Handelsschoolaalst,DC=be' -Server ''
-    }
+      New-ADGroup -Name $GroupName -SamAccountName $GroupName -GroupCategory Security -GroupScope Global -DisplayName $GroupName -Path 'OU=leerlingen,DC=Handelsschoolaalst,DC=be' -Description "Leerlingen in deze groep maken deel uit van klas $ClassName"    }
   }
   Catch [System.Data.OleDb.OleDbException]
   {
