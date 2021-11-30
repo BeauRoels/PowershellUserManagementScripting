@@ -78,3 +78,45 @@ Function CreateGroups()
 
   $DbConnection.Close()
 }
+Function CreateUsers()
+{
+  # [ Database Connection ]
+  # Variables for later use
+  $DatabaseName = 'leerlingen.accdb'
+  $GetClassesQuery = 'SELECT * FROM lln order by naam, voornaam, klas;'
+  $ConnectionString = "Provider = Microsoft.ACE.OLEDB.12.0;Data Source=$DatabaseName"
+
+  # Connecting to the Access Database
+  $DbConnection = New-Object System.Data.OleDb.OleDbConnection($ConnectionString)
+  $DbConnection.Open()
+  
+  # Preparing the query
+  $DbCommand = $DbConnection.CreateCommand()
+  $DbCommand.CommandText = $GetClassesQuery
+
+  # Creating a Reader
+  $Reader = $DbCommand.ExecuteReader()
+  $Datatable = New-Object System.Data.Datatable
+
+  # Create an Excel application, open the lln file and go to the first sheet
+  $Excel = New-Object -ComObject Excel.Application   
+  $Workbook = $Excel.Workbooks.Open('\\FS-Personeel\leerkrachten\Gunther Van Bleyenbergh\Leerlingen\lln_ad2019.xlsx')
+  $Worksheet = $WorkBook.Sheets.Item(1)
+
+  # Rename the first sheet to 'leerlingen'
+  $Worksheet.name = 'leerlingen'
+
+  $ExcelRow = 2
+
+  # Run this in a Try-Catch to not crash the script in case a record isn't found. 
+  Try
+  {
+
+  }
+  Catch [System.Data.OleDb.OleDbException]
+  {
+    Write-Host 'Cannot find record'
+  }
+
+}
+
