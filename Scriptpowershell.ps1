@@ -111,6 +111,32 @@ Function CreateUsers()
   # Run this in a Try-Catch to not crash the script in case a record isn't found. 
   Try
   {
+    $Datatable.Load($Reader)
+
+    $PreviousName = ''
+     # Looping through the records
+     Foreach ($Record in $Datatable)
+     {
+       # Get the first letter of your first name (*B*eau)
+       $CurrentName = $Record.voornaam.Substring(0, 1).ToLower()
+ 
+       # Get an array of all the last names
+       $LastNames = -split $Record.naam
+ 
+       # Combine the first name and the last names
+       Foreach ($LastName in $LastNames)
+       {
+         $CurrentName = -join ($CurrentName, $LastName)
+       }
+ 
+       # If the name is a duplicate we add a 2
+       # TODO: Update to use a counter for each dupe
+       If ($CurrentName -eq $PreviousName)
+       {
+         $CurrentName = -join ($CurrentName, '2')
+       }
+
+     }
 
   }
   Catch [System.Data.OleDb.OleDbException]
