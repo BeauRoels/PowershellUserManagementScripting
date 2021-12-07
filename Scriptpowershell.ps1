@@ -177,6 +177,21 @@ Function CreateUsers()
       $LogonScript = -join ($Record.Klas, '.bat')
       $HomeDirectory="\\FS-LLN\leerlingen\$ClassName\$CurrentName"
       $Password = ConvertTo-SecureString "Abcde123" -AsPlainText -Force
+      
+       # NOTE: Shouldn't we use the actual given names and surnames?
+       New-ADUser -Name $Email -SamAccountName $CurrentName -GivenName $CurrentName -Surname $CurrentName -UserPrincipalName $Email -DisplayName $Displayname -Description $Description -ScriptPath $LogonScript -Title $Description -Company 'Dé Handelsschool Aalst' -HomeDirectory $HomeDirectory -HomeDrive 'U:' -Enabled $True -AccountPassword $AccountPassword
+
+       # [ Set home directory permissions ]
+       $ACLOpdrachten = Get-Acl -Path $HomeDirectory
+ 
+       # Student gets rights on his own home directory
+       $ACLIdentity = "DeHandelsschool\$CurrentName"
+ 
+       # The rights that will be given
+       $ACLRights = 'Modify'
+ 
+       # Allow/Deny the ACL rules
+       $ACLType = 'Allow'
 
      }
 
