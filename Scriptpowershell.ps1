@@ -177,7 +177,7 @@ Function CreateUsers()
       $LogonScript = -join ($Record.Klas, '.bat')
       $HomeDirectory="\\FS-LLN\leerlingen\$ClassName\$CurrentName"
       $Password = ConvertTo-SecureString "Abcde123" -AsPlainText -Force
-      
+
        # NOTE: Shouldn't we use the actual given names and surnames?
        New-ADUser -Name $Email -SamAccountName $CurrentName -GivenName $CurrentName -Surname $CurrentName -UserPrincipalName $Email -DisplayName $Displayname -Description $Description -ScriptPath $LogonScript -Title $Description -Company 'Dé Handelsschool Aalst' -HomeDirectory $HomeDirectory -HomeDrive 'U:' -Enabled $True -AccountPassword $AccountPassword
 
@@ -193,6 +193,17 @@ Function CreateUsers()
        # Allow/Deny the ACL rules
        $ACLType = 'Allow'
 
+        # Create the ACL object using the arguments set by the variables
+      $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
+      $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
+
+      # Apply the ACL rule and set it to the \\FS-LLN\$ClassName\Opdrachten folder
+      $ACLOpdrachten.SetAccessRule($fileSystemAccessRule)
+      Set-Acl -Path "\\FS-LLN\leerlingen\$ClassName\Opdrachten" -AclObject $NewAcl
+
+      # Set the previous name to the current name, used to catch duplicates
+      $PreviousName = $CurrentName
+
      }
 
   }
@@ -200,6 +211,11 @@ Function CreateUsers()
   {
     Write-Host 'Cannot find record'
   }
+   # Save the workbook, close it and end the DB connection
+   $Workbook.Save()
+   $Workbook.Close($True)
+   $DbConnection.Close()
+   
 
 }
 
