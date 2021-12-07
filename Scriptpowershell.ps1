@@ -155,6 +155,29 @@ Function CreateUsers()
       $CurrentName = $CurrentName -replace "Ï",'I'
       $CurrentName = $CurrentName -replace "ç",'c'
 
+        # NOTE: This might actually be 14
+        $CurrentName = $CurrentName.Substring(0, 15)
+
+        # Write the user info in the sheet
+        $WorksheetCells.Item($ExcelRow, 1) = $Record.klas
+        $WorksheetCells.Item($ExcelRow, 2) = $Record.naam
+        $WorksheetCells.Item($ExcelRow, 3) = $Record.voornaam
+        $WorksheetCells.Item($ExcelRow, 4) = $CurrentName
+  
+        # Increase the row count
+        $ExcelRow = $ExcelRow + 1
+          # [ Create Home Directory ]
+      New-Item -Path "\\FS-LLN\leerlingen\$ClassName\" -Name $CurrentName -ItemType 'directory'
+
+      # Parameters for user creation
+      $ClassName = $Record.klas
+      $Email = -join ($CurrentName, '@Handelsschoolaalst.be')
+      $Displayname = -join ($Record.voornaam, ' ', $Record.naam)
+      $Description = -join ('Leerling ', $Record.klas)
+      $LogonScript = -join ($Record.Klas, '.bat')
+      $HomeDirectory="\\FS-LLN\leerlingen\$ClassName\$CurrentName"
+      $Password = ConvertTo-SecureString "Abcde123" -AsPlainText -Force
+
      }
 
   }
