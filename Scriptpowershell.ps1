@@ -135,6 +135,25 @@ Function CreateUsers()
        {
          $CurrentName = -join ($CurrentName, '2')
        }
+          # Replace non-email-friendly symbols
+      $CurrentName = $CurrentName -replace "'",''
+      $CurrentName = $CurrentName -replace "-",''
+      $CurrentName = $CurrentName -replace "ú",'u'
+      $CurrentName = $CurrentName -replace "ù",'u'
+      $CurrentName = $CurrentName -replace "ü",'u'
+      $CurrentName = $CurrentName -replace "Ü",'u'
+      $CurrentName = $CurrentName -replace "é",'e'
+      $CurrentName = $CurrentName -replace "è",'e'
+      $CurrentName = $CurrentName -replace "ë",'e'
+      $CurrentName = $CurrentName -replace "Ë",'e'
+      $CurrentName = $CurrentName -replace "à",'a'
+      $CurrentName = $CurrentName -replace "ä",'a'
+      $CurrentName = $CurrentName -replace "Ä",'a'
+      $CurrentName = $CurrentName -replace "ö",'o'
+      $CurrentName = $CurrentName -replace "Ö",'o'
+      $CurrentName = $CurrentName -replace "Ú",'e'
+      $CurrentName = $CurrentName -replace "Ï",'I'
+      $CurrentName = $CurrentName -replace "ç",'c'
 
      }
 
