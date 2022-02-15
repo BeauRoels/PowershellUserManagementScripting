@@ -42,15 +42,18 @@ Function CreateGroups()
       Write-Host "Groupname: $GroupName"
      
        # Create a new AD Group for the class
-      $OUObject = Get-ADOrganizationalUnit -LDAPFilter "(distinguisedName=$GroupName)"
+      #$OUObject = Get-ADOrganizationalUnit -Filter ("distinguishedName -eq '$GroupName'")
       #$OUObject = Get-ADOrganizationalUnit -Identity "OU=$GroupName,OU=leerlingen,$DC"
-      If ($OUObject -eq $null)
+      
+      try
       {
-        New-ADOrganizationalUnit -Name $GroupName -Path "OU=leerlingen,$DC" -ProtectedFromAccidentalDeletion $False
+        Get-ADOrganizationalUnit -Identity "OU=$GroupName,OU=leerlingen,$DC"
+        Write-Host "$GroupName already exists."
       }
-      Else
+      catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]
       {
-        Write-Host "OU exists: $OUObject"
+        Write-Host "Creating OU $GroupName"
+        New-ADOrganizationalUnit -Name $GroupName -Path "OU=leerlingen,$DC" -ProtectedFromAccidentalDeletion $False
       }
        
       $GroupObject = Get-ADGroup -LDAPFilter "(SAMAccountName=$GroupName)"
