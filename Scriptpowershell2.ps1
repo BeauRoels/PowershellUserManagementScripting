@@ -5,6 +5,10 @@ $DC = "DC=Handelsschoolaalst, DC=be"
 $FileserverLLN = "\\WIN-8KV6AGI5ESN"
 $FileserverPERS = "\\WIN-8KV6AGI5ESN"
 $DC = "DC=TEST, DC=be"
+$Domain = "TEST"
+$MainGroup = "Leerlingen"
+$MainFolder= "leerlingen"
+$Moderator= "leerkracht"
 # Creates groups
 Function CreateGroups()
 {
@@ -36,55 +40,110 @@ Function CreateGroups()
       # Get the data from the 'klas' record
       $GroupName = $ClassRecord.klas #Create new OU Per klas
       Write-Host "Groupname: $GroupName"
-      # Create a new AD Group for the class
+     
+       # Create a new AD Group for the class
+      $OUObject = Get-ADOrganizationalUnit -LDAPFilter "(distinguisedName=$GroupName)"
+      #$OUObject = Get-ADOrganizationalUnit -Identity "OU=$GroupName,OU=leerlingen,$DC"
+      If ($OUObject -eq $null)
+      {
+        New-ADOrganizationalUnit -Name $GroupName -Path "OU=leerlingen,$DC" -ProtectedFromAccidentalDeletion $False
+      }
+      Else
+      {
+        Write-Host "OU exists: $OUObject"
+      }
+       
       $GroupObject = Get-ADGroup -LDAPFilter "(SAMAccountName=$GroupName)"
+      #testing new OU unit
+      #New-ADOrganizationalUnit -Name "$GroupNAme" -Path "OU=leerlingen,$DC"
       if($GroupObject -eq $null)
       {
-        New-ADGroup -Name $GroupName -SamAccountName $GroupName -GroupCategory Security -GroupScope Global -DisplayName $GroupName -Path "OU=leerlingen,$DC" -Description "Leerlingen in deze groep maken deel uit van klas $GroupName"
+        New-ADGroup -Name $GroupName -SamAccountName $GroupName -GroupCategory Security -GroupScope Global -DisplayName $GroupName -Path "OU=$GroupName,OU=leerlingen,$DC" -Description "Leerlingen in deze groep maken deel uit van klas $GroupName"     
+        Add-ADGroupMember -Identity $MainGroup -Members $GroupName   
         Write-Host "Creating group: $GroupName"
       }
-
-
-
-      # [ Folder creation ]
+      Else
+      {
+        Write-Host "Group exists: $GroupName"
+      }
+      # [ Folder creation ] 
       # Test if the remote folder exists
-      $FolderExists = Test-Path -Path "$FileserverLLN\leerlingen\$GroupName"
+      $FolderExists = Test-Path -Path "$FileserverLLN\$MainFolder\$GroupName"
       If (-not $FolderExists)
       {
         # If the class folder doesn't exist we create it
-        New-Item -Path "$FileserverLLN\leerlingen\" -Name $GroupName -ItemType 'Directory'
+        New-Item -Path "$FileserverLLN\$MainFolder\" -Name $GroupName -ItemType 'Directory'
         Write-Host "creating class"
       }
 
       # Test if the remote folder exists
-      $FolderExists = Test-Path -Path "$FileserverLLN\leerlingen\$GroupName\Opdrachten"
+      $FolderExists = Test-Path -Path "$FileserverLLN\$MainFolder\$GroupName\Opdrachten"
       If (-not $FolderExists)
       {
         # If the opdrachten folder doesn't exist we create it
-        New-Item -Path "$FileserverLLN\leerlingen\$GroupName" -Name 'Opdrachten' -ItemType 'Directory'
+        New-Item -Path "$FileserverLLN\$MainFolder\$GroupName" -Name 'Opdrachten' -ItemType 'Directory'
         Write-Host "creating folder"
+      }
+       {
+        Write-Host "Folder Opdrachten exists in group: $GroupName"
       }
 
       # [ ACL rights for the folder ]
-      # Update ACL policy of Opdrachten folder
-      $ACLOpdrachten = Get-Acl -Path "$FileserverLLN\leerlingen\$GroupName\Opdrachten"
-
+      #------------------------------------------------------------------------------
+      # Update ACL policy of Opdrachten folder: Adding the classgroup to the security
+      $ACLOpdrachten = Get-Acl -Path "$FileserverLLN\$MainFolder\$GroupName\Opdrachten"
       # User that gains rights
-      $ACLIdentity = "TEST\$GroupName"
-
+      $ACLIdentity = "$Domain\$GroupName" #"$Domain\$GroupName"
       # The rights that will be given
-      $ACLRights = 'Modify'
-
+      $ACLRights = "ReadAndExecute"
       # Allow/Deny the ACL rules
-      $ACLType = 'Allow'
-
+      $ACLType = "Allow"
+      #Debugging------------------------------
+      $DebugPath = Resolve-Path $AclOpdrachten.Path
+      Write-Host "Debugpath: $DebugPath"
+      Write-Host "acl: "
+      Write-Host ($ACLOpdrachten | Format-Table | Out-String)
+      Write-Host "acl accessrule: $ACLAccessRule"
+      Write-Host ($ACLAccessRule | Format-Table | Out-String)
+      #Debugging------------------------------
       # Create the ACL object using the arguments set by the variables
       $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
       $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
-
       # Apply the ACL rule and set it to the \\FS-LLN\$GroupName\Opdrachten folder
       $ACLOpdrachten.SetAccessRule($ACLAccessRule)
-      Set-Acl -Path "$FileserverLLN\leerlingen\$GroupName\Opdrachten" -AclObject $ACLOpdrachten
+      Set-Acl -Path "$FileserverLLN\$MainFolder\$GroupName\Opdrachten" -AclObject $ACLOpdrachten
+      #-----------------------------------------------------------------------------------------
+
+
+      #------------------------------------------------------------------------------
+      # Update ACL policy of Opdrachten folder: Adding the classgroup to the security
+      $ACLOpdrachten = Get-Acl -Path "$FileserverLLN\$MainFolder\$GroupName\Opdrachten"
+      # User that gains rights
+      $ACLIdentity = "$Domain\leerkrachten" #"$Domain\$GroupName"
+      # The rights that will be given
+      $ACLRights = "Modify"
+      # Allow/Deny the ACL rules
+      $ACLType = "Allow"
+      #Debugging------------------------------
+      $DebugPath = Resolve-Path $AclOpdrachten.Path
+      Write-Host "Debugpath: $DebugPath"
+      Write-Host "acl: "
+      Write-Host ($ACLOpdrachten | Format-Table | Out-String)
+      Write-Host "acl accessrule: $ACLAccessRule"
+      Write-Host ($ACLAccessRule | Format-Table | Out-String)
+      #Debugging------------------------------
+      # Create the ACL object using the arguments set by the variables
+      $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
+      $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
+      # Apply the ACL rule and set it to the \\FS-LLN\$GroupName\Opdrachten folder
+      $ACLOpdrachten.SetAccessRule($ACLAccessRule)
+      Set-Acl -Path "$FileserverLLN\$MainFolder\$GroupName\Opdrachten" -AclObject $ACLOpdrachten
+      #-----------------------------------------------------------------------------------------
+
+      #Debugging---------------------------------------------
+      Write-Host "acl: "
+      Write-Host ($ACLOpdrachten | Format-Table | Out-String)
+      #Debugging---------------------------------------------
     }
   }
   Catch [System.Data.OleDb.OleDbException]
@@ -153,8 +212,8 @@ Function CreateUsers()
        If ($CurrentName -eq $PreviousName)
        {
          $CurrentName = -join ($CurrentName, '2') #Edit for multilples
-         Write-Host "currentname 3: $CurrentName"
-
+         #Write-Host "currentname 3: $CurrentName"
+  
        }
           # Replace non-email-friendly symbols
       # $CurrentName = $CurrentName -replace "'",''
@@ -202,51 +261,74 @@ Function CreateUsers()
       $Displayname = -join ($Record.voornaam, ' ', $Record.naam)
       $Description = -join ('Leerling ', $Record.klas)
       $LogonScript = -join ($Record.Klas, '.bat')
-      $HomeDirectory="$FileserverLLN\leerlingen\$GroupName\$CurrentName"
+      $HomeDirectory="$FileserverLLN\$MainFolder\$GroupName\$CurrentName"
       $Password = ConvertTo-SecureString "Abcde123" -AsPlainText -Force
 
       
 
-      $FolderExists = Test-Path -Path "$FileserverLLN\leerlingen\$GroupName\$CurrentName"
+      $FolderExists = Test-Path -Path "$FileserverLLN\$MainFolder\$GroupName\$CurrentName"
       If (-not $FolderExists)
       {
         # If the class folder doesn't exist we create it
-        New-Item -Path "$FileserverLLN\leerlingen\$GroupName\" -Name $CurrentName -ItemType 'directory'
+        New-Item -Path "$FileserverLLN\$MainFolder\$GroupName\" -Name $CurrentName -ItemType 'directory'
         Write-Host "creating userfolder"
       }
+      Else
+      {
+        Write-Host "Folder exists: $GroupName"
+      }
+
+
 
        # NOTE: Shouldn't we use the actual given names and surnames? testing
        $UserExists = Get-ADUser -LDAPFilter "(SAMAccountName=$CurrentName)"
        if($UserExists -eq $null)
        {
-        New-ADUser -Name $Email -SamAccountName $CurrentName -GivenName $CurrentName -Surname $CurrentName -UserPrincipalName $Email -DisplayName $Displayname -Description $Description -ScriptPath $LogonScript -Title $Description -Company 'Dé Handelsschool Aalst' -HomeDirectory $HomeDirectory -HomeDrive 'U:' -Enabled $True -AccountPassword $Password
+        New-ADUser -Name $Email -SamAccountName $CurrentName -GivenName $CurrentName -Surname $CurrentName -UserPrincipalName $Email -DisplayName $Displayname -Path "OU=$GroupName,OU=leerlingen,$DC" -Description $Description -ScriptPath $LogonScript -Title $Description -Company 'Dé Handelsschool Aalst' -HomeDirectory $HomeDirectory -HomeDrive 'U:' -Enabled $True -AccountPassword $Password
+        Add-ADGroupMember -Identity $GroupName -Members $CurrentName
+        $CurrentGroupOutput = Get-ADPrincipalGroupMembership -Identity $CurrentName
         Write-Host "creating current user: $CurrentName"
+        Write-Host "Adding Member: $CurrentName to Group: $CurrentGroupOutput"
+       }
+       Else 
+       {
+        Write-Host "User exists: $CurrentName"
        }
 
-       
-
-       # [ Set home directory permissions ]
-       $ACLOpdrachten = Get-Acl -Path $HomeDirectory
-
-       # Student gets rights on his own home directory
-       $ACLIdentity = "TEST\$CurrentName"
-
-       # The rights that will be given
-       $ACLRights = 'Modify'
-
-       # Allow/Deny the ACL rules
-       $ACLType = 'Allow'
-
+        # [ Set home directory permissions ]
+        #--------------ACL for LEERLING and his own folder-------------------
+        $ACLOpdrachten = Get-Acl -Path $HomeDirectory
+        # Student gets rights on his own home directory
+        $ACLIdentity = "$Domain\$CurrentName" #"$Domain\$GroupName"
+        # The rights that will be given
+        $ACLRights = "Modify"
+        # Allow/Deny the ACL rules
+        $ACLType = "Allow"
         # Create the ACL object using the arguments set by the variables
-      $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
-      $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
+        $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
+        $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
+        # Apply the ACL rule and set it to the \\FS-LLN\$GroupName\Opdrachten folder
+        $ACLOpdrachten.SetAccessRule($ACLAccessRule)
+        Set-Acl -Path "$HomeDirectory" -AclObject $ACLOpdrachten
+        #----------------------------------------------------------------------
+        #--------------ACL for LEERKRACHT and his own folder-------------------
+        $ACLOpdrachten = Get-Acl -Path $HomeDirectory
+        # Student gets rights on his own home directory
+        $ACLIdentity = "$Domain\leerkracht" #"$Domain\$GroupName"
+        # The rights that will be given
+        $ACLRights = "Modify"
+        # Allow/Deny the ACL rules
+        $ACLType = "Allow"
+        # Create the ACL object using the arguments set by the variables
+        $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
+        $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
+        # Apply the ACL rule and set it to the \\FS-LLN\$GroupName\Opdrachten folder
+        $ACLOpdrachten.SetAccessRule($ACLAccessRule)
+        Set-Acl -Path "$HomeDirectory" -AclObject $ACLOpdrachten
+        #----------------------------------------------------------------------
 
-      # Apply the ACL rule and set it to the \\FS-LLN\$GroupName\Opdrachten folder
-      $ACLOpdrachten.SetAccessRule($ACLAccessRule)
-      Set-Acl -Path "$FileserverLLN\leerlingen\$GroupName\Opdrachten" -AclObject $ACLOpdrachten
-
-      # Set the previous name to the current name, used to catch duplicates
-      $PreviousName = $CurrentName
+        # Set the previous name to the current name, used to catch duplicates
+        $PreviousName = $CurrentName
 
      }
 
@@ -261,7 +343,9 @@ Function CreateUsers()
    $DbConnection.Close()
 
 
-}
 
+}
+#sha1
+#546f7a834903dca60a5865264c2d029d1c5d705a
 CreateGroups
 CreateUsers
