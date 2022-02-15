@@ -62,11 +62,7 @@ Function CreateGroups()
         Add-ADGroupMember -Identity $MainGroup -Members $GroupName   
         Write-Host "Creating group: $GroupName"
       }
-      Else
-      {
-        Write-Host "Group exists: $GroupName"
-      }
-      # [ Folder creation ] 
+      # [ Folder creation ]
       # Test if the remote folder exists
       $FolderExists = Test-Path -Path "$FileserverLLN\$MainFolder\$GroupName"
       If (-not $FolderExists)
@@ -83,9 +79,6 @@ Function CreateGroups()
         # If the opdrachten folder doesn't exist we create it
         New-Item -Path "$FileserverLLN\$MainFolder\$GroupName" -Name 'Opdrachten' -ItemType 'Directory'
         Write-Host "creating folder"
-      }
-       {
-        Write-Host "Folder Opdrachten exists in group: $GroupName"
       }
 
       # [ ACL rights for the folder ]
@@ -212,7 +205,7 @@ Function CreateUsers()
        If ($CurrentName -eq $PreviousName)
        {
          $CurrentName = -join ($CurrentName, '2') #Edit for multilples
-         #Write-Host "currentname 3: $CurrentName"
+         Write-Host "currentname 3: $CurrentName"
   
        }
           # Replace non-email-friendly symbols
@@ -273,10 +266,6 @@ Function CreateUsers()
         New-Item -Path "$FileserverLLN\$MainFolder\$GroupName\" -Name $CurrentName -ItemType 'directory'
         Write-Host "creating userfolder"
       }
-      Else
-      {
-        Write-Host "Folder exists: $GroupName"
-      }
 
 
 
@@ -289,10 +278,7 @@ Function CreateUsers()
         $CurrentGroupOutput = Get-ADPrincipalGroupMembership -Identity $CurrentName
         Write-Host "creating current user: $CurrentName"
         Write-Host "Adding Member: $CurrentName to Group: $CurrentGroupOutput"
-       }
-       Else 
-       {
-        Write-Host "User exists: $CurrentName"
+
        }
 
         # [ Set home directory permissions ]
@@ -314,7 +300,7 @@ Function CreateUsers()
         #--------------ACL for LEERKRACHT and his own folder-------------------
         $ACLOpdrachten = Get-Acl -Path $HomeDirectory
         # Student gets rights on his own home directory
-        $ACLIdentity = "$Domain\leerkracht" #"$Domain\$GroupName"
+        $ACLIdentity = "$Domain\leerkrachten" #"$Domain\$GroupName"
         # The rights that will be given
         $ACLRights = "Modify"
         # Allow/Deny the ACL rules
