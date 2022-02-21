@@ -110,7 +110,7 @@ Function CreateGroups()
       # User that gains rights
       $ACLIdentity = "$Domain\$GroupName" #"$Domain\$GroupName"
       # The rights that will be given
-      $ACLRights = "ReadAndExecute,Write"
+      $ACLRights = "ReadAndExecute"
       # Allow/Deny the ACL rules
       $ACLType = "Allow"
       #Debugging------------------------------
@@ -272,7 +272,7 @@ Function CreateUsers()
        $UserExists = Get-ADUser -LDAPFilter "(SAMAccountName=$CurrentName)"
        if($UserExists -eq $null)
        {
-        New-ADUser -Name $Email -SamAccountName $CurrentName -GivenName $GivenName -Surname $Surname -UserPrincipalName $Email -DisplayName $Displayname -EmailAddress $Email -Path "OU=$GroupName,OU=leerlingen,$DC" -Description $Description -ScriptPath $LogonScript -Title $Description -Company 'De Handelsschool Aalst' -HomeDirectory $HomeDirectory -HomeDrive 'U:' -Enabled $True -AccountPassword $Password
+        New-ADUser -Name $Email -SamAccountName $CurrentName -GivenName $GivenName -Surname $Surname -UserPrincipalName $Email -DisplayName $Displayname -EmailAddress $Email -Path "OU=$GroupName,OU=leerlingen,$DC" -Description $Description -ScriptPath $LogonScript -Title $Description -Company 'De Handelsschool Aalst' -HomeDirectory $HomeDirectory -HomeDrive 'U:' -Enabled $True -AccountPassword $Password -ChangePasswordAtLogon:$true
         Add-ADGroupMember -Identity $GroupName -Members $CurrentName
         $CurrentGroupOutput = Get-ADPrincipalGroupMembership -Identity $CurrentName
         Write-Host "creating current user: $CurrentName"
@@ -285,7 +285,7 @@ Function CreateUsers()
         # Student gets rights on his own home directory
         $ACLIdentity = "$Domain\$CurrentName" #"$Domain\$GroupName"
         # The rights that will be given
-        $ACLRights = "Modify"
+        $ACLRights = "Modify, Write, Delete, AppendData"
         # Allow/Deny the ACL rules
         $ACLType = "Allow"
         # Create the ACL object using the arguments set by the variables
