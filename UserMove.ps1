@@ -1,10 +1,4 @@
-$FileserverLLN = "\\FS-LLN"
-$FileserverPERS = "\\FS-Personeel"
-$DC = "DC=Handelsschoolaalst, DC=be"
-$Domain = "DeHandelsschool"
-$MainGroup = "Leerlingen"
-$MainFolder= "leerlingen"
-$Moderator= "leerkrachten"
+
 
 
 $FileserverLLN = "\\WIN-8KV6AGI5ESN"
