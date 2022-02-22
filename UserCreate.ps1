@@ -28,6 +28,8 @@ $MainFolder= "leerlingen"
 $Moderator= "leerkracht"
 
 $CSVFolder = "c:\temp\userexport.csv"
+$KlasJaar = (Get-Date).year + 1
+
 # Creates groups
 Function CreateGroups()
 {

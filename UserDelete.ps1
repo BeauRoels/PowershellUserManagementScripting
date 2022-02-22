@@ -28,7 +28,7 @@ $DC = "DC=TEST, DC=be"
  Function DeleteLeerlingenDirectory
  {
     Write-Host "Deleting all Folders in Leerlingen Directory"
-    Remove-Item -Recurse -Force "$FileserverLLN\$MainFolder"
+    Get-ChildItem "$FileserverLLN\$MainFolder\*" Remove-Item -Recurse -Force 
     Write-Host "Folders deleted..."
  }
  DeleteLeerlingen
