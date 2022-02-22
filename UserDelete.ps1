@@ -12,9 +12,9 @@ $Moderator= "leerkracht"
 $DC = "DC=TEST, DC=be"
 
 #delete users
-
  Function DeleteLeerlingen
  {
+   Write-Host "[WARNING You are about to delete ALL users!]"
    Write-Host "Deleting all users in Leerlingen"
    Get-ADOrganizationalUnit -LDAPFilter '(name=*)' -SearchBase "OU=Leerlingen, $DC" -SearchScope OneLevel | Remove-ADOrganizationalUnit -Recursive
    Write-Host "Users deleted..."
