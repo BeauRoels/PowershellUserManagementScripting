@@ -10,7 +10,13 @@
 #------------------------------------------------------------------------------------------------
 
 
-
+$FileserverLLN = "\\FS-LLN"
+$FileserverPERS = "\\FS-Personeel"
+$DC = "DC=Handelsschoolaalst, DC=be"
+$Domain = "DeHandelsschool"
+$MainGroup = "Leerlingen"
+$MainFolder= "leerlingen"
+$Moderator= "leerkrachten"
 $FileserverLLN = "\\WIN-8KV6AGI5ESN"
 $FileserverPERS = "\\WIN-8KV6AGI5ESN"
 $DC = "DC=TEST, DC=be"
@@ -18,7 +24,6 @@ $Domain = "TEST"
 $MainGroup = "Leerlingen"
 $MainFolder= "leerlingen"
 $Moderator= "leerkracht"
-
 $CSVFolder = "c:\temp\userexport.csv"
 $KlasJaar = (Get-Date).year + 1
 
@@ -51,7 +56,8 @@ Function CreateGroups()
     Foreach ($ClassRecord in $Datatable)
     {
       # Get the data from the 'klas' record
-      $GroupName = $ClassRecord.klas #Create new OU Per klas
+      $GroupName = -join ($ClassRecord.klas, (Get-Date).year) #Create new OU Per klas
+
       Write-Host "Groupname: $GroupName"
      
        # Create a new AD Group for the class
@@ -106,7 +112,12 @@ Function CreateGroups()
       # The rights that will be given
       $ACLRights = "ReadAndExecute"
       # Allow/Deny the ACL rules
-      $ACLType = "Allow"
+      $ACLPropagationFlags = 0 #None
+
+      # Allow/Deny the ACL rules
+      $ACLType = 0 #Allow
+
+      $ACLInheritanceFlags = "ContainerInherit, ObjectInherit"
       #Debugging------------------------------
       $DebugPath = Resolve-Path $AclOpdrachten.Path
       Write-Host "Debugpath: $DebugPath"
@@ -116,10 +127,15 @@ Function CreateGroups()
       Write-Host ($ACLAccessRule | Format-Table | Out-String)
       #Debugging------------------------------
       # Create the ACL object using the arguments set by the variables
-      $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
+     $ACLArguments = $ACLIdentity, $ACLRights,$ACLInheritanceFlags, $ACLPropagationFlags,$ACLType
+     
       $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
       # Apply the ACL rule and set it to the \\FS-LLN\$GroupName\Opdrachten folder
       $ACLOpdrachten.SetAccessRule($ACLAccessRule)
+      $ACLOpdrachten.SetAccessRuleProtection($false,$true)
+
+      #Recursive enheritence
+
       Set-Acl -Path "$FileserverLLN\$MainFolder\$GroupName\Opdrachten" -AclObject $ACLOpdrachten
       #-----------------------------------------------------------------------------------------
 
@@ -131,8 +147,11 @@ Function CreateGroups()
       $ACLIdentity = "$Domain\leerkrachten" #"$Domain\$GroupName"
       # The rights that will be given
       $ACLRights = "Modify"
+      $ACLInheritanceFlags = "ContainerInherit, ObjectInherit"
+      $ACLPropagationFlags = 0 #None
+
       # Allow/Deny the ACL rules
-      $ACLType = "Allow"
+      $ACLType = 0 #Allow
       #Debugging------------------------------
       $DebugPath = Resolve-Path $AclOpdrachten.Path
       Write-Host "Debugpath: $DebugPath"
@@ -142,14 +161,26 @@ Function CreateGroups()
       Write-Host ($ACLAccessRule | Format-Table | Out-String)
       #Debugging------------------------------
       # Create the ACL object using the arguments set by the variables
-      $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
+      $ACLArguments = $ACLIdentity, $ACLRights,$ACLInheritanceFlags, $ACLPropagationFlags,$ACLType
+      
       $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
       # Apply the ACL rule and set it to the \\FS-LLN\$GroupName\Opdrachten folder
       $ACLOpdrachten.SetAccessRule($ACLAccessRule)
+      $ACLOpdrachten.SetAccessRuleProtection($false,$true)
+
+      Get-Item "$FileserverLLN\$MainFolder\$GroupName\Opdrachten"
+      
+      #Recursive Enheritence
+      # $AllFolders = Get-ChildItem -Path "$FileserverLLN\$MainFolder\$GroupName\Opdrachten" -Directory -Recursive
+      # Foreach($Folder in $AllFolders)
+      # {
+
+      # }
+
       Set-Acl -Path "$FileserverLLN\$MainFolder\$GroupName\Opdrachten" -AclObject $ACLOpdrachten
       #-----------------------------------------------------------------------------------------
 
-      #Debugging---------------------------------------------
+      #Debugging--------------------------------------------------------------------------------
       Write-Host "acl: "
       Write-Host ($ACLOpdrachten | Format-Table | Out-String)
       #Debugging---------------------------------------------
@@ -219,9 +250,8 @@ Function CreateUsers()
        # TODO: Update to use a counter for each dupe
        If ($CurrentName -eq $PreviousName)
        {
-         $CurrentName = -join ($CurrentName, '2') #Edit for multilples
+         $CurrentName = -join ($CurrentName, '2') #Edit for multiples
          Write-Host "currentname 3: $CurrentName"
-  
        }
           # Replace non-email-friendly symbols
      
@@ -243,16 +273,18 @@ Function CreateUsers()
         # Increase the row count
         $ExcelRow = $ExcelRow + 1
         # [ Create Home Directory ]
-        # Parameters for user creation
-        $GroupName = $Record.klas
+        # Parameters for user creation 
+        $GroupName = -join ($Record.klas, (Get-Date).year)
         $Email = -join ($CurrentName, '@Handelsschoolaalst.be')
         $Displayname = -join ($Record.voornaam, ' ', $Record.naam)
         $GivenName = $Record.voornaam
         $Surname = $Record.naam
-        $Description = -join ('Leerling ', $Record.klas)
+        $Description = -join ('Leerling ', $GroupName)
         $LogonScript = -join ($Record.Klas, '.bat')
         $HomeDirectory="$FileserverLLN\$MainFolder\$GroupName\$CurrentName"
         $Password = ConvertTo-SecureString "Abcde123" -AsPlainText -Force
+
+        
 
         $FolderExists = Test-Path -Path "$FileserverLLN\$MainFolder\$GroupName\$CurrentName"
         If (-not $FolderExists)
@@ -272,22 +304,30 @@ Function CreateUsers()
         Write-Host "creating current user: $CurrentName"
         Write-Host "Adding Member: $CurrentName to Group: $CurrentGroupOutput"
        }
-
+ 
         # [ Set home directory permissions ]
         #--------------ACL for LEERLING and his own folder-------------------
         $ACLOpdrachten = Get-Acl -Path $HomeDirectory
         # Student gets rights on his own home directory
         $ACLIdentity = "$Domain\$CurrentName" #"$Domain\$GroupName"
         # The rights that will be given
-        $ACLRights = "Modify, Write, Delete, AppendData"
+        $ACLRights = "Modify, Write, Delete"
+        $ACLInheritanceFlags = "ContainerInherit, ObjectInherit"
+        $ACLPropagationFlags = 0 #None
+
         # Allow/Deny the ACL rules
-        $ACLType = "Allow"
+        $ACLType = 0 #Allow
         # Create the ACL object using the arguments set by the variables
-        $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
+       $ACLArguments = $ACLIdentity, $ACLRights,$ACLInheritanceFlags, $ACLPropagationFlags,$ACLType
+   
         $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
         # Apply the ACL rule and set it to the \\FS-LLN\$GroupName\Opdrachten folder
         $ACLOpdrachten.SetAccessRule($ACLAccessRule)
+        $ACLOpdrachten.SetAccessRuleProtection($false,$true)
         Set-Acl -Path "$HomeDirectory" -AclObject $ACLOpdrachten
+
+        Get-Item "$HomeDirectory"
+      
         #----------------------------------------------------------------------
 
         #--------------ACL for LEERKRACHT and his own folder-------------------
@@ -296,13 +336,21 @@ Function CreateUsers()
         $ACLIdentity = "$Domain\leerkrachten" #"$Domain\$GroupName"
         # The rights that will be given
         $ACLRights = "Modify"
+        $ACLInheritanceFlags = "ContainerInherit, ObjectInherit"
+        $ACLPropagationFlags = 0 #None
+
         # Allow/Deny the ACL rules
-        $ACLType = "Allow"
+        $ACLType = 0 #Allow
         # Create the ACL object using the arguments set by the variables
-        $ACLArguments = $ACLIdentity, $ACLRights, $ACLType
+        $ACLArguments = $ACLIdentity, $ACLRights,$ACLInheritanceFlags, $ACLPropagationFlags, $ACLType
+
         $ACLAccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ACLArguments
         # Apply the ACL rule and set it to the \\FS-LLN\$GroupName\Opdrachten folder
         $ACLOpdrachten.SetAccessRule($ACLAccessRule)
+        $ACLOpdrachten.SetAccessRuleProtection($false,$true)
+
+        Get-Item "$HomeDirectory" 
+        
         Set-Acl -Path "$HomeDirectory" -AclObject $ACLOpdrachten
         #----------------------------------------------------------------------
 
