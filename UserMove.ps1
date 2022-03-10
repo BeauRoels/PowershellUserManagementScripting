@@ -1,13 +1,11 @@
-
-
-
-$FileserverLLN = "\\WIN-8KV6AGI5ESN"
-$FileserverPERS = "\\WIN-8KV6AGI5ESN"
-$DC = "DC=TEST, DC=be"
-$Domain = "TEST"
+$FileserverLLN = "\\FS-LLN"
+$FileserverPERS = "\\FS-Personeel"
+$DC = "DC=Handelsschoolaalst, DC=be"
+$Domain = "DeHandelsschool"
 $MainGroup = "Leerlingen"
 $MainFolder= "leerlingen"
-$Moderator= "leerkracht"
+$Moderator= "leerkrachten"
+
 $KlasOU =""
 
 $CSVFolder = "c:\temp\UserMove.csv"

@@ -1,6 +1,5 @@
 $CSVFolder = "c:\temp\userexport.csv"
 $DC = "DC=Handelsschoolaalst, DC=be"
-$DC = "DC=TEST, DC=be"
 
 Function ExportADUsersToCSVFile{
     #Write users out in CSV file use -properties displayName to force the entity to be loaded and then call it to show it
