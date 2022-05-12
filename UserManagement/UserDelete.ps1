@@ -1,5 +1,5 @@
 $ADServer = "\\ActiveDirectory-SERVER"
-$FileServer = "\\ActiveDirectory-SERVER"
+$FileServer = "\\ActiveDirectory-SERVER2"
 $DC = "DC=DOMAIN, DC=be"
 $Domain = "DOMAIN"
 $MainGroup = "PRIMARYGROUP"
