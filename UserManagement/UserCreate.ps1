@@ -1,7 +1,7 @@
 #--------------------------------[Prerequisites]-------------------------------------------------
 # *File should be run on the SERVER in the C:\Users\Administrator directory
 # *You need the database to be located in this same folder
-# *Group "leerling" should exist in AD already
+# *Group "maingroup" should exist in AD already
 # *Shared folder for "$MainGroup" has to exist
 # *Shared folder for "$Moderator" has to exist
 
