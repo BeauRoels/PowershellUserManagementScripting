@@ -2,18 +2,15 @@ $FileServer = "\\ActiveDirectory-SERVER"
 $DC = "DC=DOMAIN, DC=be"
 $Domain = "DOMAIN"
 $MainGroup = "PRIMARYGROUP"
-$SubGroup = "subgroup"
 
-
-Function NetmappingPSDriveUserFolder{
+Function NetmappingUserFolder{
 $Username = $env:USERNAME
-New-PSDrive -Name "U" -Root "$FileServer\$MainGroup\$Username" -Persist -Scope global -PSProvider "FileSystem"
+New-PSDrive -Name "U" -Root "$FileServer\$Maingroup\$Username" -Persist -Scope global -PSProvider "FileSystem"
 }
-Function NetmappingPSDriveSlaveFolder{
-$Username = $env:USERNAME
-New-PSDrive -Name "O" -Root "$FileServer\$MainGroup\TEMPLATE_KLAS\$SubGroup" -Persist -Scope global -PSProvider "FileSystem" 
+#Directeur en onderdirecteur
+Function NetmappingGroupFolder{
+New-PSDrive -Name "J" -Root "$FileServer\$Maingroup" -Persist -Scope global -PSProvider "FileSystem" 
 }
-
 
 Function getUPN{
     $Upn = 'voornaam.achternaam@handelsschoolaalst.be'
@@ -26,7 +23,7 @@ Function getUPN{
     $MappedUpn = "$FistLetter.$LastName@handelsschoolaalst.be"
 
 }
-NetmappingPSDriveUserFolder
-NetmappingPSDriveSlaveFolder
+NetmappingUserFolder
+NetmappingGroupFolder
 
 #Author Beauroels@gmail.com
