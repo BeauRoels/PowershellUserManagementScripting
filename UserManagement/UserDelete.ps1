@@ -1,25 +1,25 @@
-
-$FileserverLLN = "\\FS-LLN"
-$FileserverPERS = "\\FS-Personeel"
-$DC = "DC=Handelsschoolaalst, DC=be"
-$Domain = "DeHandelsschool"
-$MainGroup = "Leerlingen"
-$MainFolder= "leerlingen"
-$Moderator= "leerkrachten"
+$ADServer = "\\ActiveDirectory-SERVER"
+$FileServer = "\\ActiveDirectory-SERVER"
+$DC = "DC=DOMAIN, DC=be"
+$Domain = "DOMAIN"
+$MainGroup = "PRIMARYGROUP"
+$Group = "GROUP"
+$MainFolder= "PRIMARYFOLDER"
+$Moderator= "MODERATOR"
 
 #delete users
 
- Function DeleteLeerlingen
+ Function DeleteUsers
  {
-   Write-Host "Deleting all users in Leerlingen"
-   Get-ADOrganizationalUnit -LDAPFilter '(name=*)' -SearchBase "OU=Leerlingen, $DC" -SearchScope OneLevel | Remove-ADOrganizationalUnit -Recursive
+   Write-Host "Deleting all users in PRIMARYGROUP"
+   Get-ADOrganizationalUnit -LDAPFilter '(name=*)' -SearchBase "OU=$Group, $DC" -SearchScope OneLevel | Remove-ADOrganizationalUnit -Recursive
    Write-Host "Users deleted..."
  }
- Function DeleteLeerlingenDirectory
+ Function DeleteUserDirectory
  {
-    Write-Host "Deleting all Folders in Leerlingen Directory"
-    Get-ChildItem "$FileserverLLN\$MainFolder" | Remove-Item -Recurse -Force 
+    Write-Host "Deleting all Folders in PRIMARYFOLDER Directory"
+    Get-ChildItem "$ADServer\$MainFolder" | Remove-Item -Recurse -Force 
     Write-Host "Folders deleted..."
  }
- DeleteLeerlingen
- DeleteLeerlingenDirectory
+ DeleteUsers
+ DeleteUserDirectory
