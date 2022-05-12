@@ -4,6 +4,7 @@
 # *Group "maingroup" should exist in AD already
 # *Shared folder for "$MainGroup" has to exist
 # *Shared folder for "$Moderator" has to exist
+# *In your database you need: subgroup (for example klas), maingroup (for example lln), name, surname
 
 #Open powershell in the correct directory and use .\UserCreate to run this script  
 
@@ -276,7 +277,7 @@ Function CreateUsers()
         # Parameters for user creation 
         $SubGroup = $Record.group
         $GroupFolder = $Record.group
-        $Email = -join ($CurrentName, '@Handelsschoolaalst.be')
+        $Email = -join ($CurrentName, '@TEMPLATE_DOMAIN.be')
         $Displayname = -join ($Record.name, ' ', $Record.surname)
         $GivenName = $Record.name
         $Surname = $Record.surname
