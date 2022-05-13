@@ -48,7 +48,6 @@ function NetClass
         $Line = $Line -Replace "TEMPLATE_MAINFOLDER", $newMainFolder
         $Line = $Line -Replace "TEMPLATE_SHAREDFOLDER", $newSharedFolder
         $Line = $Line -Replace "TEMPLATE_DATABASE_GROUP", $newDBgroup
-        $NewFile += $Line 
         $NewFile += "`r`n"
     }
         Out-File -InputObject $NewFile -FilePath "$($NewScript).ps1" -Encoding ASCII
