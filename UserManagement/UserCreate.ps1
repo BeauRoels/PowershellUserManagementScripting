@@ -55,7 +55,7 @@ Function CreateGroups()
     Foreach ($ClassRecord in $Datatable)
     {
       # Get the data from the 'group' record
-      $SubGroup = $ClassRecord.group #Create new OU Per group
+      $SubGroup = $ClassRecord.TEMPLATE_DATABASE_GROUP #Create new OU Per group
 
       Write-Host "SubGroup: $SubGroup"
      
@@ -84,7 +84,7 @@ Function CreateGroups()
         Write-Host "Creating group: $SubGroup"
       }
       # [ Folder creation ]
-      $GroupFolder = $ClassRecord.group 
+      $GroupFolder = $ClassRecord.TEMPLATE_DATABASE_GROUP 
       # Test if the remote folder exists
       $FolderExists = Test-Path -Path "$ADServer\$MainFolder\$GroupFolder"
       If (-not $FolderExists)
@@ -269,19 +269,19 @@ Function CreateUsers()
         # $WorksheetCells.Item($ExcelRow, 2) = $Record.surname
         # $WorksheetCells.Item($ExcelRow, 3) = $Record.name
         # $WorksheetCells.Item($ExcelRow, 4) = $CurrentName
-        Write-Host "group: $($Record.group), surname: $($Record.surname), name: $($Record.name), currentname: $CurrentName"
+        Write-Host "group: $($Record.TEMPLATE_DATABASE_GROUP), surname: $($Record.surname), name: $($Record.name), currentname: $CurrentName"
         # Increase the row count
         $ExcelRow = $ExcelRow + 1
         # [ Create Home Directory ]
         # Parameters for user creation 
-        $SubGroup = $Record.group
-        $GroupFolder = $Record.group
+        $SubGroup = $Record.TEMPLATE_DATABASE_GROUP
+        $GroupFolder = $Record.TEMPLATE_DATABASE_GROUP
         $Email = -join ($CurrentName, '@Handelsschoolaalst.be')
         $Displayname = -join ($Record.name, ' ', $Record.surname)
         $GivenName = $Record.name
         $Surname = $Record.surname
         $Description = -join ($MainGroup, $SubGroup)
-        $LogonScript = -join ($Record.group, '.bat')
+        $LogonScript = -join ($Record.TEMPLATE_DATABASE_GROUP, '.bat')
         $HomeDirectory="$ADServer\$MainFolder\$GroupFolder\$CurrentName"
         #set standard password
         $Password = ConvertTo-SecureString "Abcde123" -AsPlainText -Force
